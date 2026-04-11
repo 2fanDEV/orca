@@ -19,9 +19,9 @@ export enum ApiProvider {
 
 export interface ProviderAuthenticationDetail {
   provider: Provider;
-  token?: string;
-  refreshToken?: string;
-  expiresAt?: number;
+  access?: string;
+  refresh?: string;
+  expires?: number;
   accountId?: string;
   api_key?: string;
   endpoint: string;
