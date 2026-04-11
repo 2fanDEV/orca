@@ -1,5 +1,4 @@
-import type { AgentTool } from "@mariozechner/pi-agent-core";
-import { Agent } from "@mariozechner/pi-agent-core";
+import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
 import type { Model } from "@mariozechner/pi-ai";
 import type { Provider } from "../provider/provider";
 
@@ -32,13 +31,13 @@ export class BaseAgent {
     thinkingState?: ThinkingState,
     sessionId?: string,
   ) {
-    const defaultSystemPrompt = await Bun.file(
-      "./defaults/default_base_agent.md",
-    ).text();
+    const defaultSystemPrompt =
+      systemPrompt ?? (await loadDefaultSystemPrompt());
+
     const agent = new Agent({
       initialState: {
         model,
-        systemPrompt: systemPrompt ?? defaultSystemPrompt,
+        systemPrompt: defaultSystemPrompt,
         thinking: thinkingState ?? ThinkingState.DEFAULT,
         tools,
       },
@@ -47,4 +46,16 @@ export class BaseAgent {
 
     return new BaseAgent(name, agent, provider);
   }
+}
+
+async function loadDefaultSystemPrompt() {
+  const defaultPromptFile = Bun.file(
+    new URL("./defaults/default_base_agent.md", import.meta.url),
+  );
+
+  if (!(await defaultPromptFile.exists())) {
+    throw new Error("Missing default system prompt file");
+  }
+
+  return defaultPromptFile.text();
 }

@@ -1,5 +1,15 @@
 {
   "compilerOptions": {
-    "types": ["bun-types"],
-  },
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": true,
+    "lib": ["ESNext"],
+    "types": ["bun-types"]
+  }
 }

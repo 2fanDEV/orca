@@ -2,14 +2,15 @@
   "name": "base-agent",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "bun run main.ts",
+    "check": "bunx tsc --noEmit",
+    "test": "bun test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
     "typescript": "^6.0.2"
   },
