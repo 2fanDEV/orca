@@ -11,7 +11,7 @@ import type { AgentStatus } from "../shared/validation";
 import { AgentStatus as AgentStatusValues } from "../shared/validation";
 import { createAgentCard } from "./server/agentCard";
 import { AgentServerExecutor } from "./server/executor";
-import { registerAgent } from "./server/registry";
+import { heartbeatAgent, registerAgent } from "./server/registry";
 import { AgentSessionStore } from "./server/sessionStore";
 import type {
   AgentServerConfig,
@@ -30,6 +30,7 @@ export class AgentServer implements DefaultAgentServer {
 
   private readonly app = express();
   private readonly sessionStore;
+  private heartbeatTimer?: ReturnType<typeof setInterval>;
   private server?: HttpServer;
 
   constructor(options: AgentServerOptions) {
@@ -81,6 +82,13 @@ export class AgentServer implements DefaultAgentServer {
 
     try {
       await registerAgent(this.config, this.agentCard);
+      this.agentStatus = AgentStatusValues.IDLE;
+      await heartbeatAgent(this.config, this.agentStatus);
+      this.heartbeatTimer = setInterval(() => {
+        void heartbeatAgent(this.config, this.agentStatus).catch((error) => {
+          console.error(`Failed to heartbeat agent ${this.config.agentId}:`, error);
+        });
+      }, this.config.heartbeatIntervalMs);
     } catch (error) {
       await this.stop();
       throw error;
@@ -92,6 +100,10 @@ export class AgentServer implements DefaultAgentServer {
   async stop(): Promise<void> {
     const activeServer = this.server;
     this.server = undefined;
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = undefined;
+    }
     this.sessionStore.clear();
 
     if (!activeServer) {

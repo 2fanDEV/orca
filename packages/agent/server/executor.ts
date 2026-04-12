@@ -5,6 +5,7 @@ import type {
 } from "@a2a-js/sdk/server";
 import type { AgentStatus } from "../../shared/validation";
 import { AgentStatus as AgentStatusValues } from "../../shared/validation";
+import { UserInputRequiredError } from "../../shared/userInput";
 import type { BaseAgent } from "../agent";
 import {
   createAgentMessage,
@@ -23,6 +24,7 @@ export class AgentServerExecutor implements AgentExecutor {
     eventBus: ExecutionEventBus,
   ): Promise<void> {
     this.setStatus(AgentStatusValues.BUSY);
+    let nextStatus: AgentStatus = AgentStatusValues.IDLE;
 
     try {
       const userText = extractUserText(requestContext.userMessage.parts);
@@ -47,13 +49,19 @@ export class AgentServerExecutor implements AgentExecutor {
         ),
       );
     } catch (error) {
+      if (error instanceof UserInputRequiredError) {
+        nextStatus = AgentStatusValues.AWAITING_USER_INPUT;
+        eventBus.publish(createAgentMessage(requestContext, error.message));
+        return;
+      }
+
       const message =
         error instanceof Error
           ? error.message
           : "The agent failed to handle the request.";
       eventBus.publish(createAgentMessage(requestContext, message));
     } finally {
-      this.setStatus(AgentStatusValues.IDLE);
+      this.setStatus(nextStatus);
       eventBus.finished();
     }
   }

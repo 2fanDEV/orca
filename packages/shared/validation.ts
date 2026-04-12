@@ -41,6 +41,11 @@ export const RegisteringAgentEntrySchema = z.object({
   tags: z.record(z.string(), z.string()),
 });
 
+export const AgentHeartbeatSchema = z.object({
+  status: AgentStatusSchema,
+});
+
 export type AgentStatus = z.infer<typeof AgentStatusSchema>;
 export type AgentEntry = z.infer<typeof AgentEntrySchema>;
 export type RegisteringAgentEntry = z.infer<typeof RegisteringAgentEntrySchema>;
+export type AgentHeartbeat = z.infer<typeof AgentHeartbeatSchema>;

@@ -1,4 +1,5 @@
 import type { AgentCard } from "@a2a-js/sdk";
+import type { AgentStatus } from "../../shared/validation";
 import type { AgentServerConfig } from "./types";
 
 export async function registerAgent(
@@ -23,6 +24,28 @@ export async function registerAgent(
   if (!response.ok) {
     throw new Error(
       `Failed to register agent ${config.agentId}: ${response.status} ${await response.text()}`,
+    );
+  }
+}
+
+export async function heartbeatAgent(
+  config: AgentServerConfig,
+  status: AgentStatus,
+) {
+  const response = await fetch(
+    `${trimTrailingSlash(config.registryBaseUrl)}/${config.agentId}`,
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to heartbeat agent ${config.agentId}: ${response.status} ${await response.text()}`,
     );
   }
 }

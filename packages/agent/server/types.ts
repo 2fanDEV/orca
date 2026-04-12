@@ -7,6 +7,7 @@ export interface AgentServerConfig {
   port: number;
   publicBaseUrl: string;
   registryBaseUrl: string;
+  heartbeatIntervalMs: number;
   tags: Record<string, string>;
 }
 

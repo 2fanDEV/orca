@@ -8,6 +8,7 @@ import type {
 } from "@mariozechner/pi-ai";
 import { getOAuthProvider } from "@mariozechner/pi-ai/oauth";
 import { readAuthFile, writeAuthFile } from "../shared/file";
+import { UserInputRequiredError } from "../shared/userInput";
 
 type MaybePromise<T> = T | Promise<T>;
 
@@ -20,16 +21,6 @@ export interface OAuthInteractionHandlers {
 export interface OAuthLoginOptions {
   interaction?: OAuthInteractionHandlers;
   signal?: AbortSignal;
-}
-
-export class OAuthInputRequiredError extends Error {
-  prompt: OAuthPrompt;
-
-  constructor(prompt: OAuthPrompt) {
-    super(`Manual OAuth input required: ${prompt.message}`);
-    this.name = "OAuthInputRequiredError";
-    this.prompt = prompt;
-  }
 }
 
 export async function oauthRefresh(
@@ -76,8 +67,11 @@ async function startOAuthRedirect(
         return interaction.promptUser(prompt);
       }
 
-      await interaction.showMessage(formatManualInputPrompt(prompt));
-      throw new OAuthInputRequiredError(prompt);
+      throw new UserInputRequiredError({
+        message: prompt.message,
+        placeholder: prompt.placeholder,
+        allowEmpty: prompt.allowEmpty,
+      });
     },
     onProgress: interaction.showMessage,
     signal: options.signal,
@@ -168,14 +162,4 @@ function formatTerminalPrompt(prompt: OAuthPrompt) {
   const placeholder = prompt.placeholder ? ` [${prompt.placeholder}]` : "";
   const optionalLabel = prompt.allowEmpty ? " (optional)" : "";
   return `${prompt.message}${placeholder}${optionalLabel}: `;
-}
-
-function formatManualInputPrompt(prompt: OAuthPrompt) {
-  const placeholder = prompt.placeholder
-    ? `\nSuggested input: ${prompt.placeholder}`
-    : "";
-  const optionalLabel = prompt.allowEmpty
-    ? "\nThis input can be left blank."
-    : "";
-  return `Manual input required. ${prompt.message}${placeholder}${optionalLabel}`;
 }
