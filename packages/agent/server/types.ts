@@ -1,5 +1,5 @@
 import type { AgentCard } from "@a2a-js/sdk";
-import type { AgentStatus } from "../../shared/validation";
+import type { AgentStatus } from "../../shared/agent/validation";
 import type { BaseAgent } from "../agent";
 
 export interface AgentServerConfig {

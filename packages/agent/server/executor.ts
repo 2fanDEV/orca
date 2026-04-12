@@ -3,8 +3,8 @@ import type {
   ExecutionEventBus,
   RequestContext,
 } from "@a2a-js/sdk/server";
-import type { AgentStatus } from "../../shared/validation";
-import { AgentStatus as AgentStatusValues } from "../../shared/validation";
+import type { AgentStatus } from "../../shared/agent/validation";
+import { AgentStatus as AgentStatusValues } from "../../shared/agent/validation";
 import { UserInputRequiredError } from "../../shared/userInput";
 import type { BaseAgent } from "../agent";
 import {
@@ -15,7 +15,9 @@ import {
 
 export class AgentServerExecutor implements AgentExecutor {
   constructor(
-    private readonly getSessionAgent: (a2aSessionId: string) => Promise<BaseAgent>,
+    private readonly getSessionAgent: (
+      a2aSessionId: string,
+    ) => Promise<BaseAgent>,
     private readonly setStatus: (status: AgentStatus) => void,
   ) {}
 

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { RequestContext, type ExecutionEventBus } from "@a2a-js/sdk/server";
-import { AgentStatus } from "../../shared/validation";
+import { AgentStatus } from "../../shared/agent/validation";
 import { UserInputRequiredError } from "../../shared/userInput";
 import type { BaseAgent } from "../agent";
 import { AgentServerExecutor } from "./executor";
@@ -8,9 +8,12 @@ import { AgentServerExecutor } from "./executor";
 test("execute publishes the assistant response and returns to idle", async () => {
   const statuses: string[] = [];
   const eventBus = new TestExecutionEventBus();
-  const executor = new AgentServerExecutor(async () => createAgent(), (status) => {
-    statuses.push(status);
-  });
+  const executor = new AgentServerExecutor(
+    async () => createAgent(),
+    (status) => {
+      statuses.push(status);
+    },
+  );
 
   await executor.execute(createRequestContext("Hello"), eventBus);
 
@@ -43,10 +46,7 @@ test("execute marks the agent as awaiting user input when manual input is requir
 
   await executor.execute(createRequestContext("Continue"), eventBus);
 
-  expect(statuses).toEqual([
-    AgentStatus.BUSY,
-    AgentStatus.AWAITING_USER_INPUT,
-  ]);
+  expect(statuses).toEqual([AgentStatus.BUSY, AgentStatus.AWAITING_USER_INPUT]);
   expect(eventBus.finishedCalled).toBe(true);
   expect(eventBus.messages).toHaveLength(1);
   expect(eventBus.messages[0]?.parts[0]).toMatchObject({

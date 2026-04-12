@@ -7,8 +7,8 @@ import {
   restHandler,
 } from "@a2a-js/sdk/server/express";
 import express from "express";
-import type { AgentStatus } from "../shared/validation";
-import { AgentStatus as AgentStatusValues } from "../shared/validation";
+import type { AgentStatus } from "../shared/agent/validation";
+import { AgentStatus as AgentStatusValues } from "../shared/agent/validation";
 import { createAgentCard } from "./server/agentCard";
 import { AgentServerExecutor } from "./server/executor";
 import { heartbeatAgent, registerAgent } from "./server/registry";
@@ -35,7 +35,10 @@ export class AgentServer implements DefaultAgentServer {
 
   constructor(options: AgentServerOptions) {
     this.config = options.config;
-    this.agentCard = createAgentCard(options.config.publicBaseUrl, options.card);
+    this.agentCard = createAgentCard(
+      options.config.publicBaseUrl,
+      options.card,
+    );
     this.sessionStore = new AgentSessionStore(options.sessionFactory);
 
     const executor = new AgentServerExecutor(
@@ -86,7 +89,10 @@ export class AgentServer implements DefaultAgentServer {
       await heartbeatAgent(this.config, this.agentStatus);
       this.heartbeatTimer = setInterval(() => {
         void heartbeatAgent(this.config, this.agentStatus).catch((error) => {
-          console.error(`Failed to heartbeat agent ${this.config.agentId}:`, error);
+          console.error(
+            `Failed to heartbeat agent ${this.config.agentId}:`,
+            error,
+          );
         });
       }, this.config.heartbeatIntervalMs);
     } catch (error) {
