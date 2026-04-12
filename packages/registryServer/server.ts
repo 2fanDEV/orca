@@ -93,5 +93,3 @@ export class AgentRegistry {
     });
   }
 }
-
-new AgentRegistry().run();

@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "start": "bun run main.ts",
+    "start": "bun run packages/agent/main.ts",
+    "start:agent": "bun run packages/agent/main.ts",
+    "start:registry": "bun run packages/registryServer/main.ts",
+    "oauth:login": "bun run main.ts",
     "check": "bunx tsc --noEmit",
     "test": "bun test"
   },

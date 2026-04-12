@@ -33,7 +33,7 @@ test("BaseAgent.create loads the default system prompt file", async () => {
     [],
   );
 
-  expect(baseAgent.agent.state.systemPrompt).toBe(defaultPrompt);
+  expect(baseAgent.get_system_prompt()).toBe(defaultPrompt);
 });
 
 test("BaseAgent.create prefers an explicit system prompt override", async () => {
@@ -45,7 +45,5 @@ test("BaseAgent.create prefers an explicit system prompt override", async () => 
     "Use the explicit test prompt",
   );
 
-  expect(baseAgent.agent.state.systemPrompt).toBe(
-    "Use the explicit test prompt",
-  );
+  expect(baseAgent.get_system_prompt()).toBe("Use the explicit test prompt");
 });

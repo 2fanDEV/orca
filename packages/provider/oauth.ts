@@ -1,3 +1,5 @@
+import { platform, stdin, stdout } from "node:process";
+import { createInterface } from "node:readline/promises";
 import type {
   OAuthCredentials,
   OAuthLoginCallbacks,
@@ -5,8 +7,6 @@ import type {
   Provider,
 } from "@mariozechner/pi-ai";
 import { getOAuthProvider } from "@mariozechner/pi-ai/oauth";
-import { createInterface } from "node:readline/promises";
-import { platform, stdin, stdout } from "node:process";
 import { readAuthFile, writeAuthFile } from "../shared/file";
 
 type MaybePromise<T> = T | Promise<T>;

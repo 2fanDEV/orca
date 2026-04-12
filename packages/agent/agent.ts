@@ -12,7 +12,7 @@ enum ThinkingState {
 }
 
 export class BaseAgent {
-  agent: Agent;
+  private agent: Agent;
   provider: Provider;
   name: string;
 
@@ -45,6 +45,18 @@ export class BaseAgent {
     });
 
     return new BaseAgent(name, agent, provider);
+  }
+
+  async prompt(prompt: string) {
+    return this.agent.prompt(prompt);
+  }
+
+  get_state_message() {
+    return this.agent.state.messages;
+  }
+
+  get_system_prompt() {
+    return this.agent.state.systemPrompt;
   }
 }
 
