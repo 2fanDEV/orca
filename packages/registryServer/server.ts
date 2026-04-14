@@ -9,6 +9,7 @@ import {
   type RegisteringAgentEntry,
 } from "../shared/agent/validation";
 import { AgentToolRegistry } from "./toolRegistry";
+import type { ToolSpec } from "../shared/agent/tool";
 
 export interface AgentRegistryOptions {
   staleTimeoutMs?: number;
@@ -16,7 +17,7 @@ export interface AgentRegistryOptions {
 
 export class AgentRegistry {
   private agentEntries: Map<string, AgentEntry> = new Map();
-  private toolRegistry: AgentToolRegistry = new AgentToolRegistry();
+  private toolRegistry = new AgentToolRegistry<ToolSpec>();
 
   private readonly staleTimeouts = new Map<
     string,

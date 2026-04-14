@@ -1,23 +1,23 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
-import type { ToolDefinition } from "../shared/agent/tool";
+import { isToolDefinition, type Tool } from "../shared/agent/tool";
 
-export interface ToolRegistry {
-  agentTools: Map<string, ToolDefinition>;
-  addTool: (tool: ToolDefinition) => void;
-  getTool: (id: string) => ToolDefinition | undefined;
+export interface ToolRegistry<T extends Tool> {
+  agentTools: Map<string, T>;
+  addTool: (tool: T) => void;
+  getTool: (id: string) => T | undefined;
   removeTool: (id: string) => void;
-  listTools: () => ToolDefinition[];
+  listTools: () => T[];
   toAgentTools: () => AgentTool[];
 }
 
-export class AgentToolRegistry implements ToolRegistry {
-  agentTools: Map<string, ToolDefinition>;
+export class AgentToolRegistry<T extends Tool> implements ToolRegistry<T> {
+  agentTools: Map<string, T>;
 
   constructor() {
-    this.agentTools = new Map<string, ToolDefinition>();
+    this.agentTools = new Map<string, T>();
   }
 
-  addTool = (tool: ToolDefinition) => {
+  addTool = (tool: T) => {
     this.agentTools.set(tool.id, tool);
   };
 
@@ -37,7 +37,10 @@ export class AgentToolRegistry implements ToolRegistry {
     return this.agentTools
       .values()
       .map((tool) => {
-        return tool.tool;
+        if (isToolDefinition(tool)) return tool.tool;
+        throw new Error(
+          `ToolSpec ${tool.id} is not convertable into AgentTool!`,
+        );
       })
       .toArray();
   };

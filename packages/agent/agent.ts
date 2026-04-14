@@ -21,13 +21,13 @@ export class BaseAgent {
   private agent: Agent;
   provider: Provider;
   name: string;
-  toolRegistry: ToolRegistry;
+  toolRegistry: ToolRegistry<ToolDefinition>;
 
   constructor(
     name: string,
     agent: Agent,
     provider: Provider,
-    toolRegistry: ToolRegistry,
+    toolRegistry: ToolRegistry<ToolDefinition>,
   ) {
     this.name = name;
     this.agent = agent;
@@ -47,7 +47,7 @@ export class BaseAgent {
     const defaultSystemPrompt =
       systemPrompt ?? (await loadDefaultSystemPrompt());
 
-    const toolRegistry = new AgentToolRegistry();
+    const toolRegistry = new AgentToolRegistry<ToolDefinition>();
     tools.forEach((tool) => {
       toolRegistry.addTool(tool);
     });

@@ -32,7 +32,7 @@ export class AgentServer implements DefaultAgentServer {
   agentStatus: AgentStatus = AgentStatusValues.IDLE;
 
   private readonly app = express();
-  private readonly toolRegistry = new AgentToolRegistry();
+  private readonly toolRegistry = new AgentToolRegistry<ToolDefinition>();
   private readonly sessionStore;
   private heartbeatTimer?: ReturnType<typeof setInterval>;
   private server?: HttpServer;

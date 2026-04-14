@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { AgentCard } from "@a2a-js/sdk";
-import type { ToolDefinition } from "./tool";
-import type { AgentTool } from "@mariozechner/pi-agent-core";
+import type { ToolDefinition, ToolSpec } from "./tool";
 
 export const AgentStatus = {
   REGISTERED: "Registered",
@@ -27,6 +26,12 @@ export const AgentCardSchema: z.ZodType<AgentCard> = z.looseObject({
   provider: z.optional(z.any()),
   protocolVersion: z.string(),
   version: z.string(),
+});
+
+export const ToolSpecSchema: z.ZodType<ToolSpec> = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
 });
 
 export const ToolDefinitionSchema: z.ZodType<ToolDefinition> = z.object({
