@@ -7,15 +7,21 @@ import {
   type AgentHeartbeat,
   type AgentEntry,
   type RegisteringAgentEntry,
-} from "../shared/validation";
+} from "../shared/agent/validation";
+import { AgentToolRegistry } from "./toolRegistry";
 
 export interface AgentRegistryOptions {
   staleTimeoutMs?: number;
 }
 
-export class AgentRegistry {
-  private readonly agentEntries: Map<string, AgentEntry> = new Map();
-  private readonly staleTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+export class AgentServer {
+  private agentEntries: Map<string, AgentEntry> = new Map();
+  private toolRegistry: AgentToolRegistry = new AgentToolRegistry();
+
+  private readonly staleTimeouts = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
 
   constructor(private readonly options: AgentRegistryOptions = {}) {}
 
@@ -32,7 +38,7 @@ export class AgentRegistry {
     this.clearStaleTimeout(agentId);
   }
 
-  getAgent(agentId: string) {
+  getAgent(agentId: string): AgentEntry | undefined {
     return this.agentEntries.get(agentId);
   }
 
@@ -54,6 +60,7 @@ export class AgentRegistry {
       location: agentEntry.location,
       status: AgentStatus.REGISTERED,
       lastSeen: Date.now(),
+      tools: agentEntry.tools,
       tags: agentEntry.tags,
     });
     this.scheduleStaleTimeout(agentId);
@@ -86,13 +93,13 @@ export class AgentRegistry {
     console.log("Server starting..");
     Bun.serve({
       routes: {
-        "/": {
+        "/agents": {
           GET: () => {
             return Response.json(this.listAgents());
           },
         },
         //
-        "/:id": {
+        "/agents/:id": {
           GET: (req) => {
             const agentId = req.params.id;
             const agentEntry = this.getAgent(agentId);
@@ -117,16 +124,19 @@ export class AgentRegistry {
 
             const agentEntry = this.heartbeatAgent(agentId, parsed.data);
             if (!agentEntry) {
-              return new Response(`The agent ${agentId} is not in the registry`, {
-                status: 404,
-              });
+              return new Response(
+                `The agent ${agentId} is not in the registry`,
+                {
+                  status: 404,
+                },
+              );
             }
 
             return new Response(`Heartbeat for agent ${agentId} received.`);
           },
         },
         //
-        "/register/:id": {
+        "/agents/register/:id": {
           POST: async (req) => {
             const agentId = req.params.id;
             const body = await req.json();
@@ -147,6 +157,55 @@ export class AgentRegistry {
             return new Response(
               `Agent ${agentId} has successfully registered itself.`,
             );
+          },
+        },
+        //
+        "/agents/:agentId/tools/:toolId": {
+          POST: (req) => {
+            const agentId = req.params.agentId;
+            const toolId = req.params.toolId;
+            const agent = this.getAgent(agentId);
+            if (agent === undefined) {
+              return new Response(`Agent with ${agentId} isn't registered.`, {
+                status: 404,
+              });
+            }
+            const path = `${agent.location}/tools/add/${toolId}`;
+            if (this.toolRegistry.getTool(toolId)) {
+              return new Response(
+                `Tool with the id ${toolId} is no registered with the toolRegistry.`,
+              );
+            }
+            const tool = agent.tools.find((tool) => tool.id === toolId);
+            if (tool) {
+              return new Response(
+                `Tool with id ${toolId} is already registered for agent ${agentId}.`,
+                { status: 409 },
+              );
+            }
+
+            Bun.fetch(path, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(tool),
+            });
+
+            return new Response(
+              `Tool with ${toolId} is registered for agent ${agentId}.`,
+            );
+          },
+          DELETE: (req) => {
+            return new Response("Okidoki");
+          },
+        },
+        "/tools": {
+          GET: (req) => {
+            return new Response("");
+          },
+          POST: (req) => {
+            return new Response("");
           },
         },
       },

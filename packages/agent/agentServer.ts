@@ -1,10 +1,10 @@
 import { AGENT_CARD_PATH, type AgentCard } from "@a2a-js/sdk";
 import { DefaultRequestHandler, InMemoryTaskStore } from "@a2a-js/sdk/server";
 import {
-  UserBuilder,
   agentCardHandler,
   jsonRpcHandler,
   restHandler,
+  UserBuilder,
 } from "@a2a-js/sdk/server/express";
 import express from "express";
 import type { AgentStatus } from "../shared/agent/validation";

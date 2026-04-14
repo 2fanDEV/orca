@@ -1,6 +1,11 @@
-import { Agent, type AgentTool } from "@mariozechner/pi-agent-core";
+import { Agent } from "@mariozechner/pi-agent-core";
 import type { Model } from "@mariozechner/pi-ai";
 import type { Provider } from "../provider/provider";
+import {
+  AgentToolRegistry,
+  type ToolRegistry,
+} from "../registryServer/toolRegistry";
+import type { ToolDefinition } from "../shared/agent/tool";
 
 enum ThinkingState {
   DEFAULT = "off",
@@ -15,18 +20,25 @@ export class BaseAgent {
   private agent: Agent;
   provider: Provider;
   name: string;
+  toolRegistry: ToolRegistry;
 
-  constructor(name: string, agent: Agent, provider: Provider) {
+  constructor(
+    name: string,
+    agent: Agent,
+    provider: Provider,
+    toolRegistry: ToolRegistry,
+  ) {
     this.name = name;
     this.agent = agent;
     this.provider = provider;
+    this.toolRegistry = toolRegistry;
   }
 
   static async create(
     name: string,
     provider: Provider,
     model: Model<any>,
-    tools: AgentTool[],
+    tools: ToolDefinition[],
     systemPrompt?: string,
     thinkingState?: ThinkingState,
     sessionId?: string,
@@ -34,17 +46,22 @@ export class BaseAgent {
     const defaultSystemPrompt =
       systemPrompt ?? (await loadDefaultSystemPrompt());
 
+    const toolRegistry = new AgentToolRegistry();
+    tools.forEach((tool) => {
+      toolRegistry.addTool(tool);
+    });
+
     const agent = new Agent({
       initialState: {
         model,
         systemPrompt: defaultSystemPrompt,
         thinking: thinkingState ?? ThinkingState.DEFAULT,
-        tools,
+        tools: toolRegistry.toAgentTools(),
       },
       sessionId,
     });
 
-    return new BaseAgent(name, agent, provider);
+    return new BaseAgent(name, agent, provider, toolRegistry);
   }
 
   async prompt(prompt: string) {

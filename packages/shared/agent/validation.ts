@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { AgentCard } from "@a2a-js/sdk";
+import type { ToolDefinition } from "./tool";
+import type { AgentTool } from "@mariozechner/pi-agent-core";
 
 export const AgentStatus = {
   REGISTERED: "Registered",
@@ -27,17 +29,24 @@ export const AgentCardSchema: z.ZodType<AgentCard> = z.looseObject({
   version: z.string(),
 });
 
+export const ToolDefinitionSchema: z.ZodType<ToolDefinition> = z.object({
+  id: z.string(),
+  tool: z.any(),
+});
+
 export const AgentEntrySchema = z.object({
   card: AgentCardSchema,
   location: z.url(),
   status: AgentStatusSchema,
   lastSeen: z.number(),
+  tools: z.array(ToolDefinitionSchema),
   tags: z.record(z.string(), z.string()),
 });
 
 export const RegisteringAgentEntrySchema = z.object({
   card: AgentCardSchema,
   location: z.url(),
+  tools: z.array(ToolDefinitionSchema),
   tags: z.record(z.string(), z.string()),
 });
 
