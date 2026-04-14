@@ -72,6 +72,7 @@ export class AgentServerExecutor implements AgentExecutor {
     _taskId: string,
     _eventBus: ExecutionEventBus,
   ): Promise<void> {
-    // The first implementation only supports synchronous message responses.
+    // Required by the A2A executor contract. This server only produces
+    // synchronous responses, so there is no long-running task to cancel.
   }
 }

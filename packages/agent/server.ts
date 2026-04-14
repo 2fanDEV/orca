@@ -7,12 +7,15 @@ import {
   UserBuilder,
 } from "@a2a-js/sdk/server/express";
 import express from "express";
+import { AgentToolRegistry } from "../registryServer/toolRegistry";
+import type { ToolDefinition } from "../shared/agent/tool";
 import type { AgentStatus } from "../shared/agent/validation";
 import { AgentStatus as AgentStatusValues } from "../shared/agent/validation";
 import { createAgentCard } from "./server/agentCard";
 import { AgentServerExecutor } from "./server/executor";
 import { heartbeatAgent, registerAgent } from "./server/registry";
 import { AgentSessionStore } from "./server/sessionStore";
+import { createToolRegistrationHandler } from "./server/toolHandler";
 import type {
   AgentServerConfig,
   AgentServerOptions,
@@ -29,6 +32,7 @@ export class AgentServer implements DefaultAgentServer {
   agentStatus: AgentStatus = AgentStatusValues.IDLE;
 
   private readonly app = express();
+  private readonly toolRegistry = new AgentToolRegistry();
   private readonly sessionStore;
   private heartbeatTimer?: ReturnType<typeof setInterval>;
   private server?: HttpServer;
@@ -39,7 +43,15 @@ export class AgentServer implements DefaultAgentServer {
       options.config.publicBaseUrl,
       options.card,
     );
-    this.sessionStore = new AgentSessionStore(options.sessionFactory);
+    this.sessionStore = new AgentSessionStore({
+      create: async (a2aSessionId) => {
+        const agent = await options.sessionFactory.create(a2aSessionId);
+        this.toolRegistry.listTools().forEach((tool) => {
+          agent.addTool(tool);
+        });
+        return agent;
+      },
+    });
 
     const executor = new AgentServerExecutor(
       (a2aSessionId) => this.sessionStore.get(a2aSessionId),
@@ -57,6 +69,11 @@ export class AgentServer implements DefaultAgentServer {
     this.app.use(
       `/${AGENT_CARD_PATH}`,
       agentCardHandler({ agentCardProvider: requestHandler }),
+    );
+    this.app.post(
+      "/tools/add/:toolId",
+      express.json(),
+      createToolRegistrationHandler((tool) => this.registerTool(tool)),
     );
     this.app.use(
       "/a2a/jsonrpc",
@@ -125,6 +142,18 @@ export class AgentServer implements DefaultAgentServer {
         resolve();
       });
     });
+  }
+
+  private async registerTool(tool: ToolDefinition) {
+    if (this.toolRegistry.getTool(tool.id)) {
+      return false;
+    }
+
+    this.toolRegistry.addTool(tool);
+    await this.sessionStore.forEach((agent) => {
+      agent.addTool(tool);
+    });
+    return true;
   }
 }
 

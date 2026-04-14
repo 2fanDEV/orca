@@ -6,6 +6,7 @@ import {
   type ToolRegistry,
 } from "../registryServer/toolRegistry";
 import type { ToolDefinition } from "../shared/agent/tool";
+import { fileExists, readTextFile } from "../shared/runtime";
 
 enum ThinkingState {
   DEFAULT = "off",
@@ -68,6 +69,16 @@ export class BaseAgent {
     return this.agent.prompt(prompt);
   }
 
+  addTool(tool: ToolDefinition) {
+    if (this.toolRegistry.getTool(tool.id)) {
+      return false;
+    }
+
+    this.toolRegistry.addTool(tool);
+    this.agent.state.tools = this.toolRegistry.toAgentTools();
+    return true;
+  }
+
   get_state_message() {
     return this.agent.state.messages;
   }
@@ -78,13 +89,14 @@ export class BaseAgent {
 }
 
 async function loadDefaultSystemPrompt() {
-  const defaultPromptFile = Bun.file(
-    new URL("./defaults/default_base_agent.md", import.meta.url),
+  const defaultPromptFile = new URL(
+    "./defaults/default_base_agent.md",
+    import.meta.url,
   );
 
-  if (!(await defaultPromptFile.exists())) {
+  if (!(await fileExists(defaultPromptFile))) {
     throw new Error("Missing default system prompt file");
   }
 
-  return defaultPromptFile.text();
+  return readTextFile(defaultPromptFile);
 }

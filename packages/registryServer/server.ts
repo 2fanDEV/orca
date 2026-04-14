@@ -14,7 +14,7 @@ export interface AgentRegistryOptions {
   staleTimeoutMs?: number;
 }
 
-export class AgentServer {
+export class AgentRegistry {
   private agentEntries: Map<string, AgentEntry> = new Map();
   private toolRegistry: AgentToolRegistry = new AgentToolRegistry();
 
@@ -184,7 +184,7 @@ export class AgentServer {
               );
             }
 
-            Bun.fetch(path, {
+            fetch(path, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

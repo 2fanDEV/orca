@@ -1,6 +1,5 @@
 import type { OAuthCredentials } from "@mariozechner/pi-ai";
-import { mkdir } from "node:fs/promises";
-import { dirname } from "node:path";
+import { fileExists, readTextFile, writeTextFile } from "./runtime";
 
 export type StoredAuth = OAuthCredentials & {
   accountId?: string;
@@ -14,13 +13,10 @@ export type AuthFile = Record<string, StoredAuth>;
 const DEFAULT_AUTH_FILE = ".agent/auth.json";
 
 export async function readAuthFile(filePath = DEFAULT_AUTH_FILE): Promise<AuthFile> {
-  const file = Bun.file(filePath);
-  if (!(await file.exists())) return {};
-  return JSON.parse(await file.text()) as AuthFile;
+  if (!(await fileExists(filePath))) return {};
+  return JSON.parse(await readTextFile(filePath)) as AuthFile;
 }
 
 export async function writeAuthFile(auth: AuthFile, filePath = DEFAULT_AUTH_FILE) {
-  await mkdir(dirname(filePath), { recursive: true });
-  const file = Bun.file(filePath);
-  await file.write(JSON.stringify(auth, null, 2));
+  await writeTextFile(filePath, JSON.stringify(auth, null, 2));
 }

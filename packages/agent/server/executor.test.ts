@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import { RequestContext, type ExecutionEventBus } from "@a2a-js/sdk/server";
 import { AgentStatus } from "../../shared/agent/validation";
 import { UserInputRequiredError } from "../../shared/userInput";

@@ -8,6 +8,7 @@ import type {
 } from "@mariozechner/pi-ai";
 import { getOAuthProvider } from "@mariozechner/pi-ai/oauth";
 import { readAuthFile, writeAuthFile } from "../shared/file";
+import { spawnDetached } from "../shared/runtime";
 import { UserInputRequiredError } from "../shared/userInput";
 
 type MaybePromise<T> = T | Promise<T>;
@@ -118,12 +119,7 @@ function createDefaultOAuthInteractionHandlers() {
       }
 
       try {
-        Bun.spawn({
-          cmd: command,
-          stdin: "ignore",
-          stdout: "ignore",
-          stderr: "ignore",
-        });
+        spawnDetached(command);
       } catch {
         // The auth URL is already printed, so auto-open failure is non-fatal.
       }

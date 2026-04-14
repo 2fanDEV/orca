@@ -23,4 +23,14 @@ export class AgentSessionStore {
   clear() {
     this.sessions.clear();
   }
+
+  async forEach(
+    visit: (agent: BaseAgent, a2aSessionId: string) => Promise<void> | void,
+  ) {
+    await Promise.all(
+      Array.from(this.sessions.entries(), async ([a2aSessionId, agentPromise]) => {
+        await visit(await agentPromise, a2aSessionId);
+      }),
+    );
+  }
 }

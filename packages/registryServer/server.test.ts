@@ -1,5 +1,5 @@
-import { afterEach, expect, test } from "bun:test";
-import { AgentStatus, type RegisteringAgentEntry } from "../shared/validation";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { AgentStatus, type RegisteringAgentEntry } from "../shared/agent/validation";
 import { AgentRegistry } from "./server";
 
 const TEST_REGISTERING_AGENT: RegisteringAgentEntry = {
@@ -15,6 +15,7 @@ const TEST_REGISTERING_AGENT: RegisteringAgentEntry = {
     version: "0.1.0",
   },
   location: "http://localhost:4000",
+  tools: [],
   tags: {
     transport: "a2a",
   },
@@ -22,10 +23,15 @@ const TEST_REGISTERING_AGENT: RegisteringAgentEntry = {
 
 const registries: AgentRegistry[] = [];
 
+beforeEach(() => {
+  vi.useFakeTimers();
+});
+
 afterEach(() => {
   for (const registry of registries.splice(0)) {
     registry.dispose();
   }
+  vi.useRealTimers();
 });
 
 test("registering an agent starts the stale timeout immediately", async () => {
@@ -34,7 +40,7 @@ test("registering an agent starts the stale timeout immediately", async () => {
   expect(registry.registerAgent("agent-1", TEST_REGISTERING_AGENT)).toBe(true);
   expect(registry.getAgent("agent-1")?.status).toBe(AgentStatus.REGISTERED);
 
-  await sleep(35);
+  await vi.advanceTimersByTimeAsync(35);
 
   expect(registry.getAgent("agent-1")?.status).toBe(AgentStatus.STALE);
 });
@@ -45,7 +51,7 @@ test("heartbeats update status, lastSeen, and reset the stale timeout", async ()
   registry.registerAgent("agent-1", TEST_REGISTERING_AGENT);
   const initialLastSeen = registry.getAgent("agent-1")?.lastSeen ?? 0;
 
-  await sleep(30);
+  await vi.advanceTimersByTimeAsync(30);
   const heartbeatResult = registry.heartbeatAgent("agent-1", {
     status: AgentStatus.BUSY,
   });
@@ -53,10 +59,10 @@ test("heartbeats update status, lastSeen, and reset the stale timeout", async ()
   expect(heartbeatResult?.status).toBe(AgentStatus.BUSY);
   expect((heartbeatResult?.lastSeen ?? 0) > initialLastSeen).toBe(true);
 
-  await sleep(20);
+  await vi.advanceTimersByTimeAsync(20);
   expect(registry.getAgent("agent-1")?.status).toBe(AgentStatus.BUSY);
 
-  await sleep(30);
+  await vi.advanceTimersByTimeAsync(30);
   expect(registry.getAgent("agent-1")?.status).toBe(AgentStatus.STALE);
 });
 
@@ -64,7 +70,7 @@ test("a heartbeat restores a stale agent back to a live status", async () => {
   const registry = createRegistry(20);
 
   registry.registerAgent("agent-1", TEST_REGISTERING_AGENT);
-  await sleep(35);
+  await vi.advanceTimersByTimeAsync(35);
   expect(registry.getAgent("agent-1")?.status).toBe(AgentStatus.STALE);
 
   const heartbeatResult = registry.heartbeatAgent("agent-1", {
@@ -79,10 +85,4 @@ function createRegistry(staleTimeoutMs: number) {
   const registry = new AgentRegistry({ staleTimeoutMs });
   registries.push(registry);
   return registry;
-}
-
-function sleep(milliseconds: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, milliseconds);
-  });
 }

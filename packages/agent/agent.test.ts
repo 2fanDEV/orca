@@ -1,7 +1,8 @@
-import { expect, test } from "bun:test";
+import { expect, test } from "vitest";
 import type { Model } from "@mariozechner/pi-ai";
-import { BaseAgent } from "./agent";
 import { OAuthProvider } from "../provider/provider";
+import { readTextFile } from "../shared/runtime";
+import { BaseAgent } from "./agent";
 
 const TEST_MODEL = {
   id: "test-model",
@@ -22,9 +23,9 @@ const TEST_MODEL = {
 } as Model<any>;
 
 test("BaseAgent.create loads the default system prompt file", async () => {
-  const defaultPrompt = await Bun.file(
+  const defaultPrompt = await readTextFile(
     new URL("./defaults/default_base_agent.md", import.meta.url),
-  ).text();
+  );
 
   const baseAgent = await BaseAgent.create(
     "test-agent",
